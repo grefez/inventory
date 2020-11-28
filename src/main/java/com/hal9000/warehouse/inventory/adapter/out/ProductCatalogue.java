@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ProductCatalogue implements ProductCatalogueRepository {
 
-    private static final Map<String, Product> instance = new ConcurrentHashMap<>();
+    private final Map<String, Product> instance = new ConcurrentHashMap<>();
 
     public void addToCatalogue(ProductCatalogueIn productCatalogueIn) {
         productCatalogueIn.getProductList()

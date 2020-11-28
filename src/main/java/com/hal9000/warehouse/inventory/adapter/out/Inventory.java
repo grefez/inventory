@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Inventory implements InventoryRepository {
 
-    private static final Map<Integer, ArticleSupply> instance = new ConcurrentHashMap<>();
+    private final Map<Integer, ArticleSupply> instance = new ConcurrentHashMap<>();
 
     public void addToInventory(AddInventoryIn addInventoryIn) {
         addInventoryIn.getArticleSupplies()
@@ -23,7 +23,7 @@ public class Inventory implements InventoryRepository {
             boolean enoughInventoryPresent = takeFromInventoryIn.getArticleBatchList().stream()
                 .allMatch(articleBatch -> instance.get(articleBatch.getArticleId()).getQuantity() >= articleBatch.getQuantity());
             if (enoughInventoryPresent) {
-                takeFromInventoryIn.getArticleBatchList().stream()
+                takeFromInventoryIn.getArticleBatchList()
                     .forEach(articleBatch -> instance.put(articleBatch.getArticleId(), getUpdatedArticleSupply(articleBatch)));
             }
 

@@ -1,0 +1,12 @@
+{
+  "products": [
+    {
+      "name": "Dining Chair",
+      "amount_of": 2
+    },
+    {
+      "name": "Dinning Table",
+      "amount_of": 1
+    }
+  ]
+}

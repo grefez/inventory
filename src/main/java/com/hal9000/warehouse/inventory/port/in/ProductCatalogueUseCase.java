@@ -9,7 +9,7 @@ import lombok.Value;
 public interface ProductCatalogueUseCase {
 
     enum ErrorType {
-        NON_EXISTENT_ARTICLES, NON_EXISTENT_PRODUCT, INVALID_QUANTITY
+        NON_EXISTENT_ARTICLES, NON_EXISTENT_PRODUCT, INVALID_QUANTITY, NOT_ENOUGH_SUPPLIES
     }
 
     @Getter
