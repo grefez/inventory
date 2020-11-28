@@ -59,7 +59,7 @@ class ProductCatalogueServiceTest {
     private ProductCatalogueService productCatalogueService;
 
     @Test
-    @DisplayName("When adding products to catalogue which components are in inventory, should not raise any errors")
+    @DisplayName("When adding products to catalogue whose components are in inventory, should not raise any errors")
     public void addToCatalogue () {
         when(inventoryRepository.findArticleSupplyById(kaligulaComponent1.getArticleId()))
             .thenReturn(Optional.of(new ArticleSupply(new Article(1, "leg"), 1)));
@@ -124,7 +124,7 @@ class ProductCatalogueServiceTest {
 
 
     @Test
-    @DisplayName("When selling a product with negative quantity, should raise an error")
+    @DisplayName("When selling a product with invalid quantity, should raise an error")
     public void sellingNegativeQuantity () {
         validateError(() -> productCatalogueService.sellProduct(KALIGULA, 0), INVALID_QUANTITY);
         validateError(() -> productCatalogueService.sellProduct(KALIGULA, -1), INVALID_QUANTITY);
@@ -149,7 +149,7 @@ class ProductCatalogueServiceTest {
     }
 
     @Test
-    @DisplayName("Should not include a product in the list of products that can be sold if there is no inventory for it")
+    @DisplayName("Should not include a product in the list of products that can be sold if there is not enough supplies for it")
     public void productsThatCanNotBeSold () {
 
         when(productCatalogueRepository.findAllProducts()).thenReturn(Set.of(kaligulaTable, neroTable));
@@ -159,8 +159,7 @@ class ProductCatalogueServiceTest {
             .thenReturn(Optional.of(new ArticleSupply(new Article(2, "screw"), 4)));
 
         assertEquals(
-            new AvailableProducts(Set.of(
-                new AvailableProduct(1, KALIGULA))),
+            new AvailableProducts(Set.of(new AvailableProduct(1, KALIGULA))),
             productCatalogueService.getAvailableProducts());
 
     }

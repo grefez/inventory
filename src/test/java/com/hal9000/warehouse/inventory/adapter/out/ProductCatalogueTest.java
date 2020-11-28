@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class ProductCatalogueTest {
 
-    private ProductCatalogue productCatalogue = new ProductCatalogue();
+    private final ProductCatalogue productCatalogue = new ProductCatalogue();
 
     @Test
     @DisplayName("When adding or updating products, they should be retrieved")

@@ -10,7 +10,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.ResponseEntity.status;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hal9000.warehouse.inventory.adapter.in.ProductCatalogueController.AvailableProducts.AvailableProduct;
+import com.hal9000.warehouse.inventory.adapter.in.ProductCatalogueController.AvailableProductsOut.AvailableProduct;
 import com.hal9000.warehouse.inventory.adapter.in.error.ErrorResponse;
 import com.hal9000.warehouse.inventory.domain.Product;
 import com.hal9000.warehouse.inventory.domain.Product.Component;
@@ -32,16 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("products")
 @RequiredArgsConstructor
 public class ProductCatalogueController {
-
-    private final ProductCatalogueUseCase productCatalogueUseCase;
-
-    @Value
-    @NoArgsConstructor(force = true, access = PRIVATE)
-    @AllArgsConstructor
-    static class SellProductIn {
-        String productName;
-        int productQuantity;
-    }
 
     @Value
     @NoArgsConstructor(force = true, access = PRIVATE)
@@ -76,7 +66,15 @@ public class ProductCatalogueController {
     @Value
     @NoArgsConstructor(force = true, access = PRIVATE)
     @AllArgsConstructor
-    static class AvailableProducts {
+    static class SellProductIn {
+        String productName;
+        int productQuantity;
+    }
+
+    @Value
+    @NoArgsConstructor(force = true, access = PRIVATE)
+    @AllArgsConstructor
+    static class AvailableProductsOut {
 
         @Value
         @NoArgsConstructor(force = true, access = PRIVATE)
@@ -91,6 +89,8 @@ public class ProductCatalogueController {
         List<AvailableProduct> products;
 
     }
+
+    private final ProductCatalogueUseCase productCatalogueUseCase;
 
     @PostMapping("update")
     public void addProducts (@RequestBody AddProductsIn addProductsIn) {
@@ -110,14 +110,14 @@ public class ProductCatalogueController {
     }
 
     @GetMapping("available")
-    public AvailableProducts getAvailableProducts () {
+    public AvailableProductsOut getAvailableProducts () {
 
         List<AvailableProduct> availableProducts =
             productCatalogueUseCase.getAvailableProducts().getAvailableProductList().stream()
             .map(availableProduct -> new AvailableProduct(availableProduct.getProductName(), availableProduct.getQuantity()))
             .collect(toList());
 
-        return new AvailableProducts(availableProducts);
+        return new AvailableProductsOut(availableProducts);
     }
 
     private Product getProduct(AddProductsIn.Product product) {

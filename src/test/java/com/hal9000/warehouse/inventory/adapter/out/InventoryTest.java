@@ -22,7 +22,7 @@ class InventoryTest {
     private static final ArticleSupply legSupply = new ArticleSupply(leg, 2);
     private static final ArticleSupply screwSupply = new ArticleSupply(screw, 4);
 
-    private Inventory inventory = new Inventory();
+    private final Inventory inventory = new Inventory();
 
 
     @Test

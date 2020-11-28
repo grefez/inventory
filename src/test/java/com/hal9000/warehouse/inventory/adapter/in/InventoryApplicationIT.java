@@ -11,7 +11,7 @@ import static org.springframework.http.HttpStatus.OK;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hal9000.warehouse.inventory.adapter.in.InventoryController.AddInventoryIn;
 import com.hal9000.warehouse.inventory.adapter.in.ProductCatalogueController.AddProductsIn;
-import com.hal9000.warehouse.inventory.adapter.in.ProductCatalogueController.AvailableProducts;
+import com.hal9000.warehouse.inventory.adapter.in.ProductCatalogueController.AvailableProductsOut;
 import com.hal9000.warehouse.inventory.adapter.in.ProductCatalogueController.SellProductIn;
 import com.hal9000.warehouse.inventory.adapter.in.error.ErrorResponse;
 import com.hal9000.warehouse.inventory.port.in.InventoryUseCase;
@@ -34,7 +34,8 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class InventoryApplicationIT {
 
-    public static final String TEST_FILES_FOLDER = "test-files";
+    private static final String TEST_FILES_FOLDER = "test-files";
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -71,24 +72,25 @@ class InventoryApplicationIT {
             () -> restTemplate.postForLocation("/products/sell", getPayload("sell-product-no-supplies.json", SellProductIn.class)));
 
         assertEquals(CONFLICT, httpException.getStatusCode());
-        assertEquals(NOT_ENOUGH_SUPPLIES, ProductCatalogueUseCase.ErrorType.valueOf(getErrorResponse(httpException).getCode()));
+        assertEquals(NOT_ENOUGH_SUPPLIES, ProductCatalogueUseCase.ErrorType.valueOf(
+            getErrorResponse(httpException).getCode()));
 
     }
 
     @Test
     @DisplayName ("It should list all available products")
     void listAvailableProducts () {
-        AvailableProducts availableProducts = getPayload("available-products.json", AvailableProducts.class);
+        AvailableProductsOut availableProductsOut = getPayload("available-products.json", AvailableProductsOut.class);
 
-        ResponseEntity<AvailableProducts> responseEntity = restTemplate.getForEntity("/products/available", AvailableProducts.class);
+        ResponseEntity<AvailableProductsOut> responseEntity = restTemplate.getForEntity("/products/available", AvailableProductsOut.class);
 
         assertEquals(OK, responseEntity.getStatusCode());
-        assertEquals(availableProducts, responseEntity.getBody());
+        assertEquals(availableProductsOut, responseEntity.getBody());
 
     }
 
     @Test
-    @DisplayName ("It should show errors loading articles in the inventory")
+    @DisplayName ("It should show errors loading articles with wrong parameters")
     void errorsLoadingArticles () {
         HttpClientErrorException httpException = assertThrows(HttpClientErrorException.class,
             () -> restTemplate.postForLocation("/inventory/update", getPayload("invalid-inventory.json", AddInventoryIn.class)));

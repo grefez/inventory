@@ -32,10 +32,10 @@ public class Inventory implements InventoryRepository {
     }
 
     private ArticleSupply getUpdatedArticleSupply(ArticleBatch articleBatch) {
-        int articleId = articleBatch.getArticleId();
-        ArticleSupply currentArticleSupply = instance.get(articleId);
 
+        ArticleSupply currentArticleSupply = instance.get(articleBatch.getArticleId());
         return new ArticleSupply(currentArticleSupply.getArticle(), currentArticleSupply.getQuantity() - articleBatch.getQuantity());
+
     }
 
     public Optional<ArticleSupply> findArticleSupplyById(int articleId) {

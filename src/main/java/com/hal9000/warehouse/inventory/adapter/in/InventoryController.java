@@ -24,8 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class InventoryController {
 
-    private final InventoryUseCase inventoryUseCase;
-
     @Value
     @NoArgsConstructor(force = true, access = PRIVATE)
     @AllArgsConstructor
@@ -38,7 +36,6 @@ public class InventoryController {
 
             @JsonProperty("art_id")
             int articleId;
-
             String name;
             int stock;
 
@@ -47,6 +44,7 @@ public class InventoryController {
         List<Article> inventory;
     }
 
+    private final InventoryUseCase inventoryUseCase;
 
     @PostMapping("update")
     public void addInventory(@RequestBody AddInventoryIn addInventoryIn) {
@@ -59,8 +57,7 @@ public class InventoryController {
                 inventory -> inventory.stream()
                     .map(article -> new ArticleSupply(new Article(article.getArticleId(), article.name), article.stock))
                     .collect(toList()))
-            .orElse(emptyList())
-        );
+            .orElse(emptyList()));
     }
 
 }
