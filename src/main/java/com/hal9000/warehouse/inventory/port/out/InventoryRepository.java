@@ -20,7 +20,7 @@ public interface InventoryRepository {
 
     @Value
     class TakeFromInventoryIn {
-        List<ArticleBatch> articleBatch;
+        List<ArticleBatch> articleBatchList;
     }
 
     void addToInventory(AddInventoryIn addInventoryIn);
