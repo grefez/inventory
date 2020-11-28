@@ -1,5 +1,6 @@
 package com.hal9000.warehouse.inventory.adapter.in;
 
+import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
@@ -8,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hal9000.warehouse.inventory.domain.Article;
 import com.hal9000.warehouse.inventory.domain.ArticleSupply;
 import com.hal9000.warehouse.inventory.port.in.InventoryUseCase;
-import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -59,7 +59,7 @@ public class InventoryController {
                 inventory -> inventory.stream()
                     .map(article -> new ArticleSupply(new Article(article.getArticleId(), article.name), article.stock))
                     .collect(toList()))
-            .orElse(Collections.emptyList())
+            .orElse(emptyList())
         );
     }
 
