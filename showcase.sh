@@ -5,11 +5,26 @@ curl -s http://localhost:8080/inventory/update \
 -d @test-files/inventory.json
 echo
 
+echo "Loading inventory with invalid quantities:" 
+echo "$(cat test-files/invalid-inventory.json)"
+curl -s http://localhost:8080/inventory/update \
+-H "Content-Type: application/json" \
+-d @test-files/invalid-inventory.json
+echo
+
 echo "Loading products:"
 echo "$(cat test-files/products.json)"
 curl -s http://localhost:8080/products/update \
 -H "Content-Type: application/json" \
 -d @test-files/products.json
+echo
+echo
+
+echo "Loading invalid products:"
+echo "$(cat test-files/products-invalid-articles.json)"
+curl -s http://localhost:8080/products/update \
+-H "Content-Type: application/json" \
+-d @test-files/products-invalid-articles.json
 echo
 echo
 

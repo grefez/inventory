@@ -6,6 +6,7 @@ import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.Er
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.springframework.util.StringUtils.arrayToCommaDelimitedString;
 
 import com.hal9000.warehouse.inventory.domain.ArticleSupply;
 import com.hal9000.warehouse.inventory.domain.Product;
@@ -16,10 +17,12 @@ import com.hal9000.warehouse.inventory.port.out.InventoryRepository.TakeFromInve
 import com.hal9000.warehouse.inventory.port.out.ProductCatalogueRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ProductCatalogueService implements ProductCatalogueUseCase {
 
     private final ProductCatalogueRepository productCatalogueRepository;
@@ -32,42 +35,57 @@ public class ProductCatalogueService implements ProductCatalogueUseCase {
             .flatMap(product -> product.getComponents().stream()).collect(toList());
 
         if (componentList.stream().anyMatch(component -> component.getQuantity() <= 0)) {
-            throw new ProductCatalogueException(
-                INVALID_QUANTITY, "Article quantities must be > 0");
+            throw productCatalogueException(INVALID_QUANTITY, "Article quantities must be > 0");
         }
 
-        List<Integer> articlesIdsNotInCatalogue = componentList.stream()
-            .map (Product.Component::getArticleId)
-            .filter(articleId -> inventoryRepository.findArticleSupplyById(articleId).isEmpty())
-            .collect(toList());
+        List<Integer> articleIdsNotInInventory = getArticleIdsNotInInventory(componentList);
 
-        if (!articlesIdsNotInCatalogue.isEmpty()) {
-            throw new ProductCatalogueException(
-                NON_EXISTENT_ARTICLES, format("Articles %s are not in the catalogue", articlesIdsNotInCatalogue));
-        }
+        if (!articleIdsNotInInventory.isEmpty())
+            throw productCatalogueException(NON_EXISTENT_ARTICLES, format("Articles with IDs %s are not in inventory",
+                arrayToCommaDelimitedString(articleIdsNotInInventory.toArray())));
 
         productCatalogueRepository.addToCatalogue(new ProductCatalogueRepository.ProductCatalogueIn(productCatalogueIn.getProductList()));
+        log.info ("Products '{}' where added to product catalogue", getProductNames(productCatalogueIn.getProductList()));
 
+    }
+
+    private String getProductNames(List<Product> productList) {
+        return arrayToCommaDelimitedString(productList.stream()
+            .map(Product::getName)
+            .toArray());
+    }
+
+
+    private List<Integer> getArticleIdsNotInInventory(List<Product.Component> componentList) {
+        return componentList.stream()
+            .map(Product.Component::getArticleId)
+            .filter(articleId -> inventoryRepository.findArticleSupplyById(articleId).isEmpty())
+            .collect(toList());
     }
 
     public boolean sellProduct(String productName, int productQuantity) {
 
         if (productQuantity <= 0)
-            throw new ProductCatalogueException(INVALID_QUANTITY, "Product quantity must be > 0");
+            throw productCatalogueException(INVALID_QUANTITY, "Product quantity must be > 0");
 
         return productCatalogueRepository.findProductByName(productName)
-            .map (product -> product.getComponents().stream()
-                .map(component -> new Product.Component(component.getArticleId(), component.getQuantity()))
-                .collect(toList()))
-            .map(componentList -> inventoryRepository.takeFromInventory(
-                new TakeFromInventoryIn(componentList.stream()
-                    .map(component -> new ArticleBatch(component.getArticleId(), component.getQuantity() * productQuantity))
-                    .collect(toList()))))
-            .orElseThrow(() -> new ProductCatalogueException(NON_EXISTENT_PRODUCT, format("Product with name %s does not exist in catalogue", productName)));
+            .map(Product::getComponents)
+            .map(componentList -> tryToTakeFromInventory(productName, productQuantity, componentList))
+            .orElseThrow(() -> productCatalogueException(NON_EXISTENT_PRODUCT, format("Product with name %s does not exist in catalogue", productName)));
 
     }
 
+    private boolean tryToTakeFromInventory(String productName, int productQuantity, List<Product.Component> componentList) {
+        boolean success = inventoryRepository.takeFromInventory(
+            new TakeFromInventoryIn(componentList.stream()
+                .map(component -> new ArticleBatch(component.getArticleId(), component.getQuantity() * productQuantity))
+                .collect(toList())));
+        log.info ("{} units of product '{}' " + (success ? "were sold" : "could not be sold"), productQuantity, productName);
+        return success;
+    }
+
     public AvailableProducts getAvailableProducts() {
+        log.info("Requested available products");
         return new AvailableProducts(
             productCatalogueRepository.findAllProducts().stream()
             .map(product -> new AvailableProduct(findAvailableQuantity(product), product.getName()))
@@ -87,5 +105,10 @@ public class ProductCatalogueService implements ProductCatalogueUseCase {
             .map(ArticleSupply::getQuantity)
             .orElse(0);
         return articleUnitsInInventory / component.getQuantity();
+    }
+
+    private ProductCatalogueException productCatalogueException(ErrorType errorType, String message) {
+        log.error("{}: {}", ProductCatalogueException.class.getSimpleName(), message);
+        return new ProductCatalogueException(errorType, message);
     }
 }
