@@ -3,6 +3,7 @@ package com.hal9000.warehouse.inventory.port.out;
 import com.hal9000.warehouse.inventory.domain.Product;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.Value;
 
 public interface ProductCatalogueRepository {
@@ -16,5 +17,5 @@ public interface ProductCatalogueRepository {
 
     Optional<Product> findProductByName(String productName);
 
-    List<Product> findAllProducts ();
+    Set<Product> findAllProducts ();
 }

@@ -5,6 +5,7 @@ import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.Er
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.NON_EXISTENT_PRODUCT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.hal9000.warehouse.inventory.domain.ArticleSupply;
 import com.hal9000.warehouse.inventory.domain.Product;
@@ -36,7 +37,7 @@ public class ProductCatalogueService implements ProductCatalogueUseCase {
         }
 
         List<Integer> articlesIdsNotInCatalogue = componentList.stream()
-            .map (component -> component.getArticleId())
+            .map (Product.Component::getArticleId)
             .filter(articleId -> inventoryRepository.findArticleSupplyById(articleId).isEmpty())
             .collect(toList());
 
@@ -71,7 +72,7 @@ public class ProductCatalogueService implements ProductCatalogueUseCase {
             productCatalogueRepository.findAllProducts().stream()
             .map(product -> new AvailableProduct(findAvailableQuantity(product), product.getName()))
             .filter(availableProduct -> availableProduct.getQuantity() > 0)
-            .collect(toList()));
+            .collect(toSet()));
     }
 
     private int findAvailableQuantity(Product product) {

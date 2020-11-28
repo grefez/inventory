@@ -1,14 +1,14 @@
 package com.hal9000.warehouse.inventory.application;
 
-import static com.hal9000.warehouse.inventory.application.ProductExamples.KALIGULA;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.NERO;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.kaligulaComponent1;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.kaligulaComponent2;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.kaligulaTable;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.neroTable;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.productList;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.wrongKaligulaTable1;
-import static com.hal9000.warehouse.inventory.application.ProductExamples.wrongKaligulaTable2;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.KALIGULA;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.NERO;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.kaligulaComponent1;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.kaligulaComponent2;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.kaligulaTable;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.neroTable;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.productList;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.wrongKaligulaTable1;
+import static com.hal9000.warehouse.inventory.domain.ProductExamples.wrongKaligulaTable2;
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.INVALID_QUANTITY;
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.NON_EXISTENT_ARTICLES;
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.NON_EXISTENT_PRODUCT;
@@ -36,6 +36,7 @@ import com.hal9000.warehouse.inventory.port.out.InventoryRepository.TakeFromInve
 import com.hal9000.warehouse.inventory.port.out.ProductCatalogueRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -133,14 +134,14 @@ class ProductCatalogueServiceTest {
     @DisplayName("Should return a list of products that can be sold")
     public void listOfProductsThatCanBeSold() {
 
-        when(productCatalogueRepository.findAllProducts()).thenReturn(List.of(kaligulaTable, neroTable));
+        when(productCatalogueRepository.findAllProducts()).thenReturn(Set.of(kaligulaTable, neroTable));
         when(inventoryRepository.findArticleSupplyById(1))
             .thenReturn(Optional.of(new ArticleSupply(new Article(1, "leg"), 9)));
         when(inventoryRepository.findArticleSupplyById(2))
             .thenReturn(Optional.of(new ArticleSupply(new Article(2, "screw"), 12)));
 
         assertEquals(
-            new AvailableProducts(List.of(
+            new AvailableProducts(Set.of(
                 new AvailableProduct(3, KALIGULA),
                 new AvailableProduct(2, NERO))),
             productCatalogueService.getAvailableProducts());
@@ -151,14 +152,14 @@ class ProductCatalogueServiceTest {
     @DisplayName("Should not include a product in the list of products that can be sold if there is no inventory for it")
     public void productsThatCanNotBeSold () {
 
-        when(productCatalogueRepository.findAllProducts()).thenReturn(List.of(kaligulaTable, neroTable));
+        when(productCatalogueRepository.findAllProducts()).thenReturn(Set.of(kaligulaTable, neroTable));
         when(inventoryRepository.findArticleSupplyById(1))
             .thenReturn(Optional.of(new ArticleSupply(new Article(1, "leg"), 2)));
         when(inventoryRepository.findArticleSupplyById(2))
             .thenReturn(Optional.of(new ArticleSupply(new Article(2, "screw"), 4)));
 
         assertEquals(
-            new AvailableProducts(List.of(
+            new AvailableProducts(Set.of(
                 new AvailableProduct(1, KALIGULA))),
             productCatalogueService.getAvailableProducts());
 

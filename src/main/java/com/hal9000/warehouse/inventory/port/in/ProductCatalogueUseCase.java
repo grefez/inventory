@@ -2,6 +2,7 @@ package com.hal9000.warehouse.inventory.port.in;
 
 import com.hal9000.warehouse.inventory.domain.Product;
 import java.util.List;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Value;
 
@@ -27,7 +28,7 @@ public interface ProductCatalogueUseCase {
 
     @Value
     class AvailableProducts {
-        List<AvailableProduct> availableProductList;
+        Set<AvailableProduct> availableProductList;
     }
 
     @Value
