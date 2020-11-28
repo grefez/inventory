@@ -31,14 +31,11 @@ class InventoryServiceTest {
     @Test
     @DisplayName("Add articles to inventory")
     public void addToInventory () {
-        List<ArticleSupply> articleSupplies = singletonList(
-            new ArticleSupply(
-                new Article(2, "leg"), 1));
+        List<ArticleSupply> articleSupplies = singletonList(new ArticleSupply(new Article(2, "leg"), 1));
 
         inventoryService.addToInventory(new AddInventoryIn(articleSupplies));
 
         verify(inventoryRepository).addToInventory(new InventoryRepository.AddInventoryIn(articleSupplies));
-
     }
 
     @Test

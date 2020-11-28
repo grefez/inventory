@@ -25,5 +25,5 @@ public interface InventoryUseCase {
         List<ArticleSupply> articleSupplies;
     }
 
-    void addToInventory(AddInventoryIn addInventoryIn);
+    void addToInventory(AddInventoryIn addInventoryIn) throws InventoryException;
 }

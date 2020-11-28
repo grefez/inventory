@@ -10,6 +10,7 @@ import com.hal9000.warehouse.inventory.domain.ArticleSupply;
 import com.hal9000.warehouse.inventory.domain.Product;
 import com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase;
 import com.hal9000.warehouse.inventory.port.out.InventoryRepository;
+import com.hal9000.warehouse.inventory.port.out.InventoryRepository.ArticleBatch;
 import com.hal9000.warehouse.inventory.port.out.InventoryRepository.TakeFromInventoryIn;
 import com.hal9000.warehouse.inventory.port.out.ProductCatalogueRepository;
 import java.util.List;
@@ -57,7 +58,10 @@ public class ProductCatalogueService implements ProductCatalogueUseCase {
             .map (product -> product.getComponents().stream()
                 .map(component -> new Product.Component(component.getArticleId(), component.getQuantity()))
                 .collect(toList()))
-            .map(componentList -> inventoryRepository.takeFromInventory(new TakeFromInventoryIn(componentList, productQuantity)))
+            .map(componentList -> inventoryRepository.takeFromInventory(
+                new TakeFromInventoryIn(componentList.stream()
+                    .map(component -> new ArticleBatch(component.getArticleId(), component.getQuantity() * productQuantity))
+                    .collect(toList()))))
             .orElseThrow(() -> new ProductCatalogueException(NON_EXISTENT_PRODUCT, format("Product with name %s does not exist in catalogue", productName)));
 
     }
@@ -66,6 +70,7 @@ public class ProductCatalogueService implements ProductCatalogueUseCase {
         return new AvailableProducts(
             productCatalogueRepository.findAllProducts().stream()
             .map(product -> new AvailableProduct(findAvailableQuantity(product), product.getName()))
+            .filter(availableProduct -> availableProduct.getQuantity() > 0)
             .collect(toList()));
     }
 

@@ -14,10 +14,10 @@ public class InventoryService implements InventoryUseCase {
     private final InventoryRepository inventoryRepository;
 
     public void addToInventory(AddInventoryIn addInventoryIn) {
-        boolean invalidQuantitiesExist = addInventoryIn.getArticleSupplies().stream()
+        boolean invalidQuantitiesFound = addInventoryIn.getArticleSupplies().stream()
             .anyMatch(articleSupply -> articleSupply.getQuantity() <= 0);
 
-        if (invalidQuantitiesExist)
+        if (invalidQuantitiesFound)
             throw new InventoryException(INVALID_QUANTITY, "All article quantities must be >= 0");
 
         inventoryRepository.addToInventory(new InventoryRepository.AddInventoryIn(addInventoryIn.getArticleSupplies()));

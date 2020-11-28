@@ -36,9 +36,9 @@ public interface ProductCatalogueUseCase {
         String productName;
     }
 
-    void addToCatalogue(ProductCatalogueIn productCatalogueIn);
+    void addToCatalogue(ProductCatalogueIn productCatalogueIn) throws ProductCatalogueException;
 
-    boolean sellProduct (String productName, int quantity);
+    boolean sellProduct (String productName, int quantity) throws ProductCatalogueException;
 
     AvailableProducts getAvailableProducts ();
 

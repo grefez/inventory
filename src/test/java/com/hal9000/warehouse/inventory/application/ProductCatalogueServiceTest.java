@@ -1,5 +1,14 @@
 package com.hal9000.warehouse.inventory.application;
 
+import static com.hal9000.warehouse.inventory.application.ProductExamples.KALIGULA;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.NERO;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.kaligulaComponent1;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.kaligulaComponent2;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.kaligulaTable;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.neroTable;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.productList;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.wrongKaligulaTable1;
+import static com.hal9000.warehouse.inventory.application.ProductExamples.wrongKaligulaTable2;
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.INVALID_QUANTITY;
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.NON_EXISTENT_ARTICLES;
 import static com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType.NON_EXISTENT_PRODUCT;
@@ -16,14 +25,13 @@ import static org.mockito.Mockito.when;
 
 import com.hal9000.warehouse.inventory.domain.Article;
 import com.hal9000.warehouse.inventory.domain.ArticleSupply;
-import com.hal9000.warehouse.inventory.domain.Product;
-import com.hal9000.warehouse.inventory.domain.Product.Component;
 import com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.AvailableProduct;
 import com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.AvailableProducts;
 import com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ErrorType;
 import com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ProductCatalogueException;
 import com.hal9000.warehouse.inventory.port.in.ProductCatalogueUseCase.ProductCatalogueIn;
 import com.hal9000.warehouse.inventory.port.out.InventoryRepository;
+import com.hal9000.warehouse.inventory.port.out.InventoryRepository.ArticleBatch;
 import com.hal9000.warehouse.inventory.port.out.InventoryRepository.TakeFromInventoryIn;
 import com.hal9000.warehouse.inventory.port.out.ProductCatalogueRepository;
 import java.util.List;
@@ -40,11 +48,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ProductCatalogueServiceTest {
 
-    private static final String KALIGULA = "Kaligula";
-    private static final String NERO = "Nero";
-
-    public static final int PRODUCT_QUANTITY = 2;
-
     @Mock
     private ProductCatalogueRepository productCatalogueRepository;
 
@@ -53,26 +56,6 @@ class ProductCatalogueServiceTest {
 
     @InjectMocks
     private ProductCatalogueService productCatalogueService;
-
-    private final Component kaligulaComponent1 = new Component(1, 2);
-    private final Component kaligulaComponent2 = new Component(2, 4);
-
-    private final Product kaligulaTable = new Product(KALIGULA,
-        List.of(kaligulaComponent1, kaligulaComponent2));
-
-    private final Product wrongKaligulaTable1 = new Product(KALIGULA,
-        List.of(kaligulaComponent1, new Component(2, -1)));
-
-    private final Product wrongKaligulaTable2 = new Product(KALIGULA,
-        List.of(new Component(1, 0), kaligulaComponent2));
-
-    private final Component neroComponent1 = new Component(1, 3);
-    private final Component neroComponent2 = new Component(2, 5);
-
-    private final Product neroTable = new Product(NERO,
-        List.of(neroComponent1, neroComponent2));
-
-    private final List<Product> productList = singletonList(kaligulaTable);
 
     @Test
     @DisplayName("When adding products to catalogue which components are in inventory, should not raise any errors")
@@ -114,12 +97,11 @@ class ProductCatalogueServiceTest {
 
         when(inventoryRepository.takeFromInventory(new TakeFromInventoryIn(
             List.of(
-                new Component(kaligulaComponent1.getArticleId(),kaligulaComponent1.getQuantity()),
-                new Component(kaligulaComponent2.getArticleId(),kaligulaComponent2.getQuantity())),
-            PRODUCT_QUANTITY)))
+                new ArticleBatch(kaligulaComponent1.getArticleId(),kaligulaComponent1.getQuantity() * 2),
+                new ArticleBatch(kaligulaComponent2.getArticleId(),kaligulaComponent2.getQuantity() * 2)))))
             .thenReturn(true);
 
-        assertTrue(productCatalogueService.sellProduct(KALIGULA, PRODUCT_QUANTITY));
+        assertTrue(productCatalogueService.sellProduct(KALIGULA, 2));
 
     }
 
@@ -128,7 +110,7 @@ class ProductCatalogueServiceTest {
     public void sellingProductsWithNotEnoughInventory () {
         when(productCatalogueRepository.findProductByName(KALIGULA)).thenReturn(Optional.of(kaligulaTable));
         when(inventoryRepository.takeFromInventory(any(TakeFromInventoryIn.class))).thenReturn(false);
-        assertFalse(productCatalogueService.sellProduct(KALIGULA, PRODUCT_QUANTITY));
+        assertFalse(productCatalogueService.sellProduct(KALIGULA, 2));
 
     }
 
@@ -136,7 +118,7 @@ class ProductCatalogueServiceTest {
     @DisplayName("When selling a non existent product, should raise an error")
     public void sellingNonExistentProduct () {
         when(productCatalogueRepository.findProductByName(KALIGULA)).thenReturn(empty());
-        validateError(() -> productCatalogueService.sellProduct(KALIGULA, PRODUCT_QUANTITY), NON_EXISTENT_PRODUCT);
+        validateError(() -> productCatalogueService.sellProduct(KALIGULA, 2), NON_EXISTENT_PRODUCT);
     }
 
 
@@ -161,6 +143,23 @@ class ProductCatalogueServiceTest {
             new AvailableProducts(List.of(
                 new AvailableProduct(3, KALIGULA),
                 new AvailableProduct(2, NERO))),
+            productCatalogueService.getAvailableProducts());
+
+    }
+
+    @Test
+    @DisplayName("Should not include a product in the list of products that can be sold if there is no inventory for it")
+    public void productsThatCanNotBeSold () {
+
+        when(productCatalogueRepository.findAllProducts()).thenReturn(List.of(kaligulaTable, neroTable));
+        when(inventoryRepository.findArticleSupplyById(1))
+            .thenReturn(Optional.of(new ArticleSupply(new Article(1, "leg"), 2)));
+        when(inventoryRepository.findArticleSupplyById(2))
+            .thenReturn(Optional.of(new ArticleSupply(new Article(2, "screw"), 4)));
+
+        assertEquals(
+            new AvailableProducts(List.of(
+                new AvailableProduct(1, KALIGULA))),
             productCatalogueService.getAvailableProducts());
 
     }
